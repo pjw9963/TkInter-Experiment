@@ -1,23 +1,20 @@
-import requests
+from requests_html import AsyncHTMLSession, HTMLSession
 from bs4 import BeautifulSoup
 import tkinter as tk
 import sqlite3
 
 
 def comence_scrapping(root):
-    headers = {"User-Agent": 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:72.0) Gecko/20100101 Firefox/72.0'}
     conn = sqlite3.connect('scrap.db')
     c = conn.execute("SELECT * FROM scraps;")
     for row in c:
-        page = requests.get(row[1], headers=headers)
-        soup = BeautifulSoup(page.content, 'html.parser')
+        asession = HTMLSession()
+        page = asession.get(row[1])
         try:
-            print(row[3])
             if int(row[3]) == 1:
-                result = soup.find(id=str(row[2])).get_text().strip()
+                result = page.html.find('#' + str(row[2]), first=True).text
             else:
-                print("'" + str(row[2]) + "'")
-                result = soup.find_all("html_element", class_=str(row[2])).get_text().strip()
+                result = page.html.find('.' + str(row[2]), first=True).text
         except AttributeError as ex:
             result = "...Error..."
         frame = tk.Frame(root)                
